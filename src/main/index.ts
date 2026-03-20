@@ -28,7 +28,7 @@ function createWindow(): void {
     frame: false,
     titleBarStyle: 'hidden',
     trafficLightPosition: { x: 12, y: 12 },
-    alwaysOnTop: store.get('alwaysOnTop', true) as boolean,
+    alwaysOnTop: is.dev ? false : store.get('alwaysOnTop', true) as boolean,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -38,6 +38,9 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow?.show()
+    if (is.dev) {
+      mainWindow?.webContents.openDevTools({ mode: 'detach' })
+    }
   })
 
   mainWindow.on('resize', saveBounds)

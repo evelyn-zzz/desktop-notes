@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -9,13 +9,11 @@ export default function App() {
   const [alwaysOnTop, setAlwaysOnTop] = useState(true)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // 初始加载
   useEffect(() => {
     window.api.note.read().then(setContent)
     window.api.window.isAlwaysOnTop().then(setAlwaysOnTop)
   }, [])
 
-  // 防抖自动保存
   const handleChange = useCallback((val: string) => {
     setContent(val)
     if (saveTimer.current) clearTimeout(saveTimer.current)
@@ -24,7 +22,6 @@ export default function App() {
     }, SAVE_DELAY)
   }, [])
 
-  // 点击 checkbox 切换 [ ] / [x]
   const handleToggleTodo = useCallback((index: number) => {
     const lines = content.split('\n')
     let count = 0
@@ -45,6 +42,25 @@ export default function App() {
     handleChange(updated.join('\n'))
   }, [content, handleChange])
 
+  // content 变化时重建闭包，计数器从 0 开始
+  const checkboxComponents = useMemo(() => {
+    let index = 0
+    return {
+      input: ({ checked, disabled: _disabled, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
+        const currentIndex = index++
+        return (
+          <input
+            type="checkbox"
+            checked={!!checked}
+            onChange={() => handleToggleTodo(currentIndex)}
+            className="mr-1 cursor-pointer"
+            {...props}
+          />
+        )
+      }
+    }
+  }, [content, handleToggleTodo])
+
   const toggleAlwaysOnTop = async () => {
     const next = await window.api.window.toggleAlwaysOnTop()
     setAlwaysOnTop(next)
@@ -57,7 +73,6 @@ export default function App() {
         className="flex items-center justify-between px-4 py-2 bg-amber-100 border-b border-amber-200"
         style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
       >
-        {/* 红绿灯占位 */}
         <div className="w-16" />
         <span className="text-xs font-medium text-amber-700 select-none">Desktop Notes</span>
         <div style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
@@ -77,64 +92,23 @@ export default function App() {
 
       {/* 主体：左编辑 + 右预览 */}
       <div className="flex flex-1 overflow-hidden">
-        {/* 编辑区 */}
         <textarea
           className="flex-1 p-4 bg-amber-50 text-sm text-gray-800 resize-none outline-none font-mono border-r border-amber-200"
           value={content}
           onChange={(e) => handleChange(e.target.value)}
-          placeholder="用 Markdown 写点什么...\n\n待办事项示例：\n- [ ] 未完成\n- [x] 已完成"
+          placeholder={'用 Markdown 写点什么...\n\n待办事项示例：\n- [ ] 未完成\n- [x] 已完成'}
           spellCheck={false}
         />
 
-        {/* 预览区 */}
         <div className="flex-1 p-4 overflow-y-auto bg-white text-sm text-gray-800">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
-            components={{
-              input: ({ checked, ...props }) => {
-                // 找到当前是第几个 checkbox
-                return (
-                  <CheckboxItem
-                    checked={!!checked}
-                    onToggle={handleToggleTodo}
-                    {...props}
-                  />
-                )
-              }
-            }}
+            components={checkboxComponents}
           >
             {content || '*预览区*'}
           </ReactMarkdown>
         </div>
       </div>
     </div>
-  )
-}
-
-// 用 ref 追踪 checkbox 渲染顺序
-let checkboxIndex = 0
-
-function CheckboxItem({
-  checked,
-  onToggle,
-  ...props
-}: {
-  checked: boolean
-  onToggle: (i: number) => void
-  [key: string]: unknown
-}) {
-  const indexRef = useRef<number | null>(null)
-  if (indexRef.current === null) {
-    indexRef.current = checkboxIndex++
-  }
-
-  return (
-    <input
-      type="checkbox"
-      checked={checked}
-      onChange={() => onToggle(indexRef.current!)}
-      className="mr-1 cursor-pointer"
-      {...props}
-    />
   )
 }
