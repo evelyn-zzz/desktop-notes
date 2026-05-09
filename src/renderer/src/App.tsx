@@ -72,11 +72,16 @@ export default function App() {
     })
     window.api.on('mode:change', (v) => setMode(v as Mode))
     window.api.on('theme:change', (v) => setTheme(v as Theme))
+    window.api.on('note:external-change', (v) => {
+      if (saveTimer.current) return
+      setContent(v as string)
+    })
 
     return () => {
       window.api.off('init')
       window.api.off('mode:change')
       window.api.off('theme:change')
+      window.api.off('note:external-change')
     }
   }, [])
 

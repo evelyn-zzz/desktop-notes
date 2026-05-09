@@ -37,10 +37,13 @@
     "productName": "Desktop Notes",
     "mac": {
       "category": "public.app-category.productivity",
-      "target": "dmg"
+      "target": "dmg",
+      "icon": "resources/icon.icns"
     },
     "files": [
-      "out/**/*"
+      "out/**/*",
+      "node_modules/**/*",
+      "resources/**/*"
     ],
     "directories": {
       "output": "dist"

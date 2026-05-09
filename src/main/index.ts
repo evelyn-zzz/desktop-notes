@@ -4,12 +4,15 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import Store from 'electron-store'
 import fs from 'fs'
 
+app.setName('Desktop Notes')
+
 type Mode = 'split' | 'edit' | 'preview'
 type Theme = 'yellow' | 'gray' | 'mint' | 'blue'
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 let store: InstanceType<typeof Store>
+let lastAppWriteContent: string | null = null
 
 function buildMenu(mode: Mode, theme: Theme) {
   const modeItems = (
@@ -54,6 +57,18 @@ function buildMenu(mode: Mode, theme: Theme) {
         { role: 'about' },
         { type: 'separator' },
         { role: 'quit' }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' }
       ]
     },
     {
@@ -123,6 +138,21 @@ function saveBounds() {
   store.set('windowBounds', mainWindow.getBounds())
 }
 
+function watchNoteFile() {
+  const notePath = join(app.getPath('userData'), 'note.md')
+  if (!fs.existsSync(notePath)) fs.writeFileSync(notePath, '', 'utf-8')
+  fs.watch(notePath, () => {
+    try {
+      const content = fs.readFileSync(notePath, 'utf-8')
+      if (content === lastAppWriteContent) return
+      lastAppWriteContent = content
+      mainWindow?.webContents.send('note:external-change', content)
+    } catch {
+      // file temporarily unavailable during write
+    }
+  })
+}
+
 function createTray() {
   tray = new Tray(nativeImage.createEmpty())
   tray.setToolTip('Desktop Notes')
@@ -139,6 +169,7 @@ function registerIpcHandlers() {
   })
 
   ipcMain.handle('note:write', (_event, content: string) => {
+    lastAppWriteContent = content
     fs.writeFileSync(join(app.getPath('userData'), 'note.md'), content, 'utf-8')
   })
 
@@ -172,12 +203,19 @@ function registerIpcHandlers() {
 app.whenReady().then(() => {
   store = new Store()
   electronApp.setAppUserModelId('com.desktop-notes')
+  const iconPath = join(__dirname, '../../resources/icon.png')
+  if (process.platform === 'darwin' && app.dock) {
+    const icon = nativeImage.createFromPath(iconPath)
+    if (!icon.isEmpty()) app.dock.setIcon(icon)
+  }
+
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
 
   registerIpcHandlers()
   buildMenu(store.get('mode', 'split') as Mode, store.get('theme', 'yellow') as Theme)
   createWindow()
   createTray()
+  watchNoteFile()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
