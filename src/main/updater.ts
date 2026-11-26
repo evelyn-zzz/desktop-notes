@@ -123,10 +123,19 @@ function resolvePackagedAppPath(): string | null {
   return bundlePath
 }
 
+function formatReleaseNotesForDialog(notes: string): string {
+  return notes
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .trim()
+}
+
 async function promptInstall(latestVersion: string, releaseNotes?: string): Promise<boolean> {
   const win = getWindow()
-  const detail = releaseNotes?.trim()
-    ? `当前版本：v${app.getVersion()}\n最新版本：v${latestVersion}\n\n更新内容：\n${releaseNotes.trim()}`
+  const formattedNotes = releaseNotes ? formatReleaseNotesForDialog(releaseNotes) : ''
+  const detail = formattedNotes
+    ? `当前版本：v${app.getVersion()}\n最新版本：v${latestVersion}\n\n更新内容：\n${formattedNotes}`
     : `当前版本：v${app.getVersion()}\n最新版本：v${latestVersion}`
 
   const options: Electron.MessageBoxOptions = {

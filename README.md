@@ -66,12 +66,19 @@ CSC_IDENTITY_AUTODISCOVERY=false pnpm build && pnpm exec electron-builder --mac 
 
 ### GitHub Actions 自动发布
 
-仓库已配置 [release.yml](.github/workflows/release.yml)，推送 `v*` 格式的标签（需与 [package.json](package.json) 中的 `version` 保持一致）即可自动构建 `arm64` / `x64` 安装包并发布到 GitHub Releases：
+仓库已配置 [release.yml](.github/workflows/release.yml) 与 [CHANGELOG.md](CHANGELOG.md)。发版前请先完成以下两步：
+
+1. 在 [CHANGELOG.md](CHANGELOG.md) 中新增对应版本章节（如 `## [0.2.0] - YYYY-MM-DD`），工作流会自动提取该章节作为 Release 正文及应用内更新弹窗内容。
+2. 同步更新 [package.json](package.json) 中的 `version`（需与 tag 去掉 `v` 后一致）。
+
+然后提交并推送 `v*` 标签，GitHub 会自动构建 `arm64` / `x64` 安装包并发布 Release：
 
 ```bash
 git tag v0.2.0
 git push origin master --tags
 ```
+
+完整历史变更见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 技术栈
 
