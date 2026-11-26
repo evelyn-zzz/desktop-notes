@@ -14,9 +14,10 @@
 
 ## 下载与安装（macOS）
 
-1. 前往 [GitHub Releases](https://github.com/evelyn-zzz/desktop-notes/releases) 下载对应芯片架构的 `.dmg` 安装包：
-   - Apple Silicon（M1–M5）：`*-arm64.dmg`
-   - Intel Mac：`*.dmg`（非 arm64）
+1. 前往 [GitHub Releases](https://github.com/evelyn-zzz/desktop-notes/releases) 下载对应芯片架构的 `.dmg` 安装包（勿下载源码压缩包）：
+   - Apple Silicon（M1–M5）：`Desktop-Notes-*-arm64.dmg`
+   - Intel Mac：`Desktop-Notes-*-x64.dmg`
+   - （`*.zip` 为应用内自动更新使用的资源包，手动安装下载 `.dmg` 即可）
 2. 打开 `.dmg`，将 `Desktop Notes.app` 拖入「应用程序」文件夹。
 3. **首次启动授权**：由于安装包未使用 Apple 开发者证书签名，首次打开若被系统拦截，可任选以下方式放行：
    - 在「应用程序」中右键点击 `Desktop Notes.app` -> 选择「打开」->「仍要打开」。
