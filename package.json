@@ -38,6 +38,7 @@
   "build": {
     "appId": "com.desktop-notes.app",
     "productName": "Desktop Notes",
+    "afterPack": "scripts/afterPack.cjs",
     "mac": {
       "category": "public.app-category.productivity",
       "artifactName": "Desktop-Notes-${version}-${arch}.${ext}",

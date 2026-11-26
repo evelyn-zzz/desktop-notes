@@ -180,11 +180,10 @@ CSC_IDENTITY_AUTODISCOVERY=false pnpm build && pnpm exec electron-builder --arm6
 ```
 
 #### 2. 其他设备运行权限
-未签名的应用在其他 Mac 上运行会因 Gatekeeper 拦截而报错。接收方需执行以下操作：
-1.  **右键打开**：在访达中右键点击应用，选择“打开”，在弹出的窗口中点击“仍要打开”。
-2.  **系统设置**：前往“系统设置 -> 隐私与安全性”，找到页面下方的“仍要打开”。
-3.  **终端手动授权**（推荐）：
-    如果应用依然无法运行，可在终端执行以下命令清除隔离属性：
+未公证的应用从网络下载后会被 macOS 隔离，首次打开时请**点击「完成」（不要点「移到废纸篓」）**，再通过以下方式放行：
+1.  **系统设置（适用于 macOS 15+）**：前往「系统设置 -> 隐私与安全性」，在页面底部点击「仍要打开」。
+2.  **终端清除隔离属性**：
     ```bash
-    sudo xattr -rd com.apple.quarantine /Applications/Desktop\ Notes.app
+    xattr -cr /Applications/Desktop\ Notes.app
     ```
+    （若安装的是未重新签名的旧包，可补充执行 `codesign --force --deep --sign - /Applications/Desktop\ Notes.app` 修复签名。）

@@ -19,11 +19,11 @@
    - Intel Mac：`Desktop-Notes-*-x64.dmg`
    - （`*.zip` 为应用内自动更新使用的资源包，手动安装下载 `.dmg` 即可）
 2. 打开 `.dmg`，将 `Desktop Notes.app` 拖入「应用程序」文件夹。
-3. **首次启动授权**：由于安装包未使用 Apple 开发者证书签名，首次打开若被系统拦截，可任选以下方式放行：
-   - 在「应用程序」中右键点击 `Desktop Notes.app` -> 选择「打开」->「仍要打开」。
-   - 或在终端执行：
+3. **首次启动授权**：由于安装包未使用 Apple 开发者证书公证（已内置 ad-hoc 签名），首次打开若提示无法验证恶意软件，请**点击「完成」（不要点「移到废纸篓」）**，然后任选以下方式放行：
+   - **系统设置放行（推荐，适用于 macOS 15+）**：打开「系统设置 -> 隐私与安全性」，滑到底部找到 `Desktop Notes` 点击 **「仍要打开」**。
+   - **终端清除隔离属性**：
      ```bash
-     sudo xattr -rd com.apple.quarantine /Applications/Desktop\ Notes.app
+     xattr -cr /Applications/Desktop\ Notes.app
      ```
 
 ## 检查更新

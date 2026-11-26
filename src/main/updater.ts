@@ -368,7 +368,7 @@ export async function downloadAndInstallUpdate(): Promise<void> {
         '  exit 1',
         'fi',
         'rm -rf "$BACKUP_APP"',
-        'xattr -rd com.apple.quarantine "$TARGET_APP" 2>/dev/null || true',
+        'xattr -cr "$TARGET_APP" 2>/dev/null || true',
         'open -n "$TARGET_APP"',
         'rm -rf "$WORK_DIR"',
         ''

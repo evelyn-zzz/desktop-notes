@@ -16,6 +16,7 @@
 
 ### 修复
 - 修复 `electron-builder` 在 tag 构建时默认尝试使用未配置的 `GH_TOKEN` 自动发布导致 GitHub Actions 失败的问题。
+- 修复跳过签名打包后未执行 ad-hoc 重签导致 macOS 提示签名损坏/阻止运行的问题（新增 `afterPack` 自动执行 `codesign` 与严格校验）。
 
 ## [0.1.0] - 2026-05-09
 
