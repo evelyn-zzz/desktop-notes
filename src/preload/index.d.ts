@@ -5,6 +5,9 @@ declare global {
         read: () => Promise<string>
         write: (content: string) => Promise<void>
       }
+      clipboard: {
+        writeText: (text: string) => Promise<void>
+      }
       window: {
         toggleAlwaysOnTop: () => Promise<boolean>
         isAlwaysOnTop: () => Promise<boolean>

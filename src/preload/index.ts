@@ -5,6 +5,9 @@ contextBridge.exposeInMainWorld('api', {
     read: () => ipcRenderer.invoke('note:read'),
     write: (content: string) => ipcRenderer.invoke('note:write', content)
   },
+  clipboard: {
+    writeText: (text: string) => ipcRenderer.invoke('clipboard:writeText', text)
+  },
   window: {
     toggleAlwaysOnTop: () => ipcRenderer.invoke('window:toggleAlwaysOnTop'),
     isAlwaysOnTop: () => ipcRenderer.invoke('window:isAlwaysOnTop')

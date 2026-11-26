@@ -59,7 +59,9 @@ export default function App() {
   const [alwaysOnTop, setAlwaysOnTop] = useState(true)
   const [mode, setMode] = useState<Mode>('split')
   const [theme, setTheme] = useState<Theme>('yellow')
+  const [copied, setCopied] = useState(false)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     window.api.note.read().then(setContent)
@@ -78,6 +80,7 @@ export default function App() {
     })
 
     return () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current)
       window.api.off('init')
       window.api.off('mode:change')
       window.api.off('theme:change')
@@ -173,6 +176,22 @@ export default function App() {
     await window.api.settings.setMode(next)
   }
 
+  const handleCopyAll = useCallback(async () => {
+    if (!content) return
+    try {
+      await window.api.clipboard.writeText(content)
+    } catch {
+      try {
+        await navigator.clipboard.writeText(content)
+      } catch {
+        return
+      }
+    }
+    setCopied(true)
+    if (copyTimer.current) clearTimeout(copyTimer.current)
+    copyTimer.current = setTimeout(() => setCopied(false), 1500)
+  }, [content])
+
   const modeLabel: Record<Mode, string> = { split: '分屏', edit: '编辑', preview: '预览' }
 
   const t = themes[theme]
@@ -191,6 +210,16 @@ export default function App() {
           className="flex items-center gap-1.5"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
+          {mode === 'preview' && (
+            <button
+              onClick={handleCopyAll}
+              disabled={!content}
+              title="复制全部文本"
+              className={`text-xs px-1.5 py-0.5 rounded transition-colors ${t.pin} disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              {copied ? '已复制' : '复制'}
+            </button>
+          )}
           <button
             onClick={cycleMode}
             title="切换模式"
@@ -225,15 +254,19 @@ export default function App() {
 
         {/* 预览区 */}
         {(mode === 'split' || mode === 'preview') && (
-          <div className={`${mode === 'split' ? 'flex-1' : 'w-full'} p-4 overflow-y-auto ${t.preview} text-sm text-gray-800`}>
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              allowedElements={['h1', 'h2', 'h3', 'ul', 'ol', 'li', 'p', 'input', 'hr']}
-              unwrapDisallowed
-              components={checkboxComponents}
-            >
-              {content || '*预览区*'}
-            </ReactMarkdown>
+          <div className={`${mode === 'split' ? 'flex-1' : 'w-full'} p-4 overflow-y-auto ${t.preview} text-sm text-gray-800 select-text`}>
+            {content ? (
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                allowedElements={['h1', 'h2', 'h3', 'ul', 'ol', 'li', 'p', 'input', 'hr']}
+                unwrapDisallowed
+                components={checkboxComponents}
+              >
+                {content}
+              </ReactMarkdown>
+            ) : (
+              <p className="my-1 leading-relaxed text-gray-400 select-none">预览区</p>
+            )}
           </div>
         )}
       </div>

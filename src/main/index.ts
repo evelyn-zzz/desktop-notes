@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, Tray, Menu, nativeImage, clipboard } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import Store from 'electron-store'
@@ -126,6 +126,29 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  // 编辑区与预览区右键菜单支持复制等文本操作
+  mainWindow.webContents.on('context-menu', (_event, params) => {
+    const template: Electron.MenuItemConstructorOptions[] = []
+    if (params.isEditable) {
+      template.push(
+        { label: '剪切', role: 'cut', enabled: params.editFlags.canCut },
+        { label: '复制', role: 'copy', enabled: params.editFlags.canCopy },
+        { label: '粘贴', role: 'paste', enabled: params.editFlags.canPaste },
+        { type: 'separator' },
+        { label: '全选', role: 'selectAll', enabled: params.editFlags.canSelectAll }
+      )
+    } else if (params.selectionText.length > 0) {
+      template.push(
+        { label: '复制', role: 'copy', enabled: params.editFlags.canCopy },
+        { label: '全选', role: 'selectAll', enabled: params.editFlags.canSelectAll }
+      )
+    }
+
+    if (template.length > 0 && mainWindow) {
+      Menu.buildFromTemplate(template).popup({ window: mainWindow })
+    }
+  })
+
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
@@ -171,6 +194,10 @@ function registerIpcHandlers() {
   ipcMain.handle('note:write', (_event, content: string) => {
     lastAppWriteContent = content
     fs.writeFileSync(join(app.getPath('userData'), 'note.md'), content, 'utf-8')
+  })
+
+  ipcMain.handle('clipboard:writeText', (_event, text: string) => {
+    clipboard.writeText(text)
   })
 
   ipcMain.handle('window:toggleAlwaysOnTop', () => {
