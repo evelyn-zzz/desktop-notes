@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import Store from 'electron-store'
 import fs from 'fs'
+import { checkForUpdates, downloadAndInstallUpdate, getUpdateState } from './updater'
 
 app.setName('Desktop Notes')
 
@@ -55,6 +56,12 @@ function buildMenu(mode: Mode, theme: Theme) {
       label: 'Desktop Notes',
       submenu: [
         { role: 'about' },
+        {
+          label: '检查更新...',
+          click: () => {
+            void checkForUpdates({ manual: true })
+          }
+        },
         { type: 'separator' },
         { role: 'quit' }
       ]
@@ -200,6 +207,10 @@ function registerIpcHandlers() {
     clipboard.writeText(text)
   })
 
+  ipcMain.handle('updater:getState', () => getUpdateState())
+  ipcMain.handle('updater:check', () => checkForUpdates({ manual: true }))
+  ipcMain.handle('updater:install', () => downloadAndInstallUpdate())
+
   ipcMain.handle('window:toggleAlwaysOnTop', () => {
     if (!mainWindow) return
     const next = !mainWindow.isAlwaysOnTop()
@@ -243,6 +254,11 @@ app.whenReady().then(() => {
   createWindow()
   createTray()
   watchNoteFile()
+
+  // 启动后延迟静默检查更新，避免阻塞首屏渲染
+  setTimeout(() => {
+    void checkForUpdates({ manual: false })
+  }, 3000)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

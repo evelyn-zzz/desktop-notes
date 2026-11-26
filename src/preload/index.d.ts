@@ -1,3 +1,23 @@
+export type UpdateStatus =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'not-available'
+  | 'downloading'
+  | 'installing'
+  | 'error'
+
+export interface UpdateState {
+  status: UpdateStatus
+  currentVersion: string
+  latestVersion?: string
+  releaseNotes?: string
+  downloadUrl?: string
+  assetName?: string
+  progress?: number
+  message?: string
+}
+
 declare global {
   interface Window {
     api: {
@@ -7,6 +27,11 @@ declare global {
       }
       clipboard: {
         writeText: (text: string) => Promise<void>
+      }
+      updater: {
+        getState: () => Promise<UpdateState>
+        check: () => Promise<UpdateState>
+        install: () => Promise<void>
       }
       window: {
         toggleAlwaysOnTop: () => Promise<boolean>

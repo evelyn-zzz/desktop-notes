@@ -8,6 +8,11 @@ contextBridge.exposeInMainWorld('api', {
   clipboard: {
     writeText: (text: string) => ipcRenderer.invoke('clipboard:writeText', text)
   },
+  updater: {
+    getState: () => ipcRenderer.invoke('updater:getState'),
+    check: () => ipcRenderer.invoke('updater:check'),
+    install: () => ipcRenderer.invoke('updater:install')
+  },
   window: {
     toggleAlwaysOnTop: () => ipcRenderer.invoke('window:toggleAlwaysOnTop'),
     isAlwaysOnTop: () => ipcRenderer.invoke('window:isAlwaysOnTop')

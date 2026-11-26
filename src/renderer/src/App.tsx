@@ -7,6 +7,13 @@ const SAVE_DELAY = 500
 type Mode = 'split' | 'edit' | 'preview'
 type Theme = 'yellow' | 'gray' | 'mint' | 'blue'
 
+interface UpdateState {
+  status: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'installing' | 'error'
+  currentVersion: string
+  latestVersion?: string
+  progress?: number
+}
+
 const themes: Record<Theme, {
   root: string
   titleBar: string
@@ -60,11 +67,13 @@ export default function App() {
   const [mode, setMode] = useState<Mode>('split')
   const [theme, setTheme] = useState<Theme>('yellow')
   const [copied, setCopied] = useState(false)
+  const [updateState, setUpdateState] = useState<UpdateState | null>(null)
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     window.api.note.read().then(setContent)
+    window.api.updater.getState().then(setUpdateState)
 
     window.api.on('init', (v) => {
       const { mode, theme, alwaysOnTop } = v as { mode: Mode; theme: Theme; alwaysOnTop: boolean }
@@ -74,6 +83,7 @@ export default function App() {
     })
     window.api.on('mode:change', (v) => setMode(v as Mode))
     window.api.on('theme:change', (v) => setTheme(v as Theme))
+    window.api.on('updater:status', (v) => setUpdateState(v as UpdateState))
     window.api.on('note:external-change', (v) => {
       if (saveTimer.current) return
       setContent(v as string)
@@ -84,6 +94,7 @@ export default function App() {
       window.api.off('init')
       window.api.off('mode:change')
       window.api.off('theme:change')
+      window.api.off('updater:status')
       window.api.off('note:external-change')
     }
   }, [])
@@ -196,6 +207,19 @@ export default function App() {
 
   const t = themes[theme]
 
+  const showUpdateBadge =
+    updateState &&
+    (updateState.status === 'available' ||
+      updateState.status === 'downloading' ||
+      updateState.status === 'installing')
+
+  const updateBadgeLabel =
+    updateState?.status === 'downloading'
+      ? `下载 ${updateState.progress ?? 0}%`
+      : updateState?.status === 'installing'
+        ? '安装中...'
+        : `更新 v${updateState?.latestVersion ?? ''}`
+
   return (
     <div className={`flex flex-col h-screen ${t.root} rounded-xl overflow-hidden shadow-2xl`}>
       {/* 标题栏 — 极简 */}
@@ -210,6 +234,16 @@ export default function App() {
           className="flex items-center gap-1.5"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
+          {showUpdateBadge && (
+            <button
+              onClick={() => void window.api.updater.install()}
+              disabled={updateState?.status !== 'available'}
+              title="点击下载并安装新版本"
+              className={`text-xs px-1.5 py-0.5 rounded transition-colors ${t.pinActive} disabled:opacity-75 disabled:cursor-wait`}
+            >
+              {updateBadgeLabel}
+            </button>
+          )}
           {mode === 'preview' && (
             <button
               onClick={handleCopyAll}

@@ -1,7 +1,9 @@
 {
   "name": "desktop-notes",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A macOS desktop sticky notes app",
+  "license": "MIT",
+  "repository": "https://github.com/evelyn-zzz/desktop-notes.git",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -37,7 +39,10 @@
     "productName": "Desktop Notes",
     "mac": {
       "category": "public.app-category.productivity",
-      "target": "dmg",
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "resources/icon.icns"
     },
     "files": [
